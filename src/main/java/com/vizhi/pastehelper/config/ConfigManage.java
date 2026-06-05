@@ -63,12 +63,20 @@ public class ConfigManage {
 
     private List<PasteItem> createDefaultConfig() {
 
-        List<PasteItem> pasteItemList = new ArrayList<>();
-
         PasteItem pasteItem = new PasteItem();
+        PasteItem pasteItem1 = new PasteItem();
+
+        List<PasteItem> pasteItemList = new ArrayList<>();
+        pasteItem1.setName("default");
+        pasteItem1.setText("world");
+        pasteItem1.setShortcut("ctrl+shift+1");
+
+
         pasteItem.setName("default");
-        pasteItem.setText("default");
+        pasteItem.setText("hellow");
         pasteItem.setShortcut("ctrl+alt+1");
+
+        pasteItemList.add(pasteItem1);
         pasteItemList.add(pasteItem);
 
         saveConfig(pasteItemList);
