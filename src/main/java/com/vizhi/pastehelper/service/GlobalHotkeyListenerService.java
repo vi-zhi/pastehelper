@@ -35,6 +35,8 @@ public class GlobalHotkeyListenerService implements NativeKeyListener {
     private boolean isCtrlPressed = false;
     private boolean isShiftPressed = false;
     private boolean isAltPressed = false;
+    private boolean isRobotOperating = false;
+    private String pendingText = null; // 待执行的粘贴文本
 
     @PostConstruct
     public void init() {
@@ -58,7 +60,11 @@ public class GlobalHotkeyListenerService implements NativeKeyListener {
     @Override
     public void nativeKeyPressed(NativeKeyEvent nativeEvent) {
 
-        log.info("按键: " + NativeKeyEvent.getKeyText(nativeEvent.getKeyCode()));
+        if (isRobotOperating) {
+            return;
+        }
+
+        log.info("按键按下: " + NativeKeyEvent.getKeyText(nativeEvent.getKeyCode()));
 
         switch (nativeEvent.getKeyCode()) {
             case NativeKeyEvent.VC_CONTROL:
@@ -80,7 +86,6 @@ public class GlobalHotkeyListenerService implements NativeKeyListener {
             log.info("");
         }
 
-
     }
 
     private void extracted(NativeKeyEvent nativeEvent, String prem) {
@@ -95,14 +100,20 @@ public class GlobalHotkeyListenerService implements NativeKeyListener {
             String text = shortcutMap.get(sb.toString());
             log.info("文本: " + text);
             if (text != null && !text.isEmpty()) {
-                log.info("检测到快捷键: {}, 执行粘贴", sb);
-                copyAndPaste(text);
+                log.info("检测到快捷键: {}, 准备执行粘贴", sb);
+                pendingText = text; // 记录待粘贴文本，等待按键释放后执行
             }
         }
     }
 
     @Override
     public void nativeKeyReleased(NativeKeyEvent nativeEvent) {
+        
+        if (isRobotOperating) {
+            return;
+        }
+        
+        log.info("按键松开: " + NativeKeyEvent.getKeyText(nativeEvent.getKeyCode()));
 
         switch (nativeEvent.getKeyCode()) {
             case NativeKeyEvent.VC_CONTROL:
@@ -116,10 +127,28 @@ public class GlobalHotkeyListenerService implements NativeKeyListener {
                 break;
         }
 
+        // 当所有修饰键都释放后，执行待处理的粘贴操作
+        if (!isCtrlPressed && !isShiftPressed && !isAltPressed && pendingText != null) {
+            String textToPaste = pendingText;
+            pendingText = null; // 清空待处理文本
+            
+            // 延迟一小段时间确保系统完全稳定
+            new Thread(() -> {
+                try {
+                    Thread.sleep(50);
+                    copyAndPaste(textToPaste);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }).start();
+        }
+
         log.debug("按键释放");
     }
     private void copyAndPaste(String text) {
         try {
+            isRobotOperating = true;
+            
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 
             StringSelection selection = new StringSelection(text);
@@ -138,6 +167,8 @@ public class GlobalHotkeyListenerService implements NativeKeyListener {
             robot.keyRelease(KeyEvent.VK_V);
             robot.keyRelease(KeyEvent.VK_CONTROL);
 
+            robot.delay(100);
+            
             log.info("粘贴完成");
         } catch (AWTException e) {
             log.error("创建 Robot 失败", e);
@@ -146,6 +177,8 @@ public class GlobalHotkeyListenerService implements NativeKeyListener {
             Thread.currentThread().interrupt();
         } catch (Exception e) {
             log.error("粘贴操作失败", e);
+        } finally {
+            isRobotOperating = false;
         }
     }
 
