@@ -38,6 +38,9 @@ public class GlobalHotkeyListenerService implements NativeKeyListener {
     private boolean isRobotOperating = false;
     private String pendingText = null; // 待执行的粘贴文本
 
+    /**
+     * 初始化
+     */
     @PostConstruct
     public void init() {
         try {
@@ -89,16 +92,17 @@ public class GlobalHotkeyListenerService implements NativeKeyListener {
     }
 
     private void extracted(NativeKeyEvent nativeEvent, String prem) {
+
         int keyCode = nativeEvent.getKeyCode();
 
         if (keyCode >= NativeKeyEvent.VC_1 && keyCode <= NativeKeyEvent.VC_9) {
+
             StringBuilder sb = new StringBuilder();
             sb.append(prem);
             sb.append(keyCode - NativeKeyEvent.VC_1 + 1);
 
-            log.info(sb.toString());
             String text = shortcutMap.get(sb.toString());
-            log.info("文本: " + text);
+
             if (text != null && !text.isEmpty()) {
                 log.info("检测到快捷键: {}, 准备执行粘贴", sb);
                 pendingText = text; // 记录待粘贴文本，等待按键释放后执行

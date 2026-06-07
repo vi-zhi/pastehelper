@@ -85,7 +85,7 @@ public class ConfigManage {
     }
 
     //一次保存pasteItems
-    private void saveConfig(List<PasteItem> pasteItems) {
+    public void saveConfig(List<PasteItem> pasteItems) {
         try {
             Files.createDirectories(Paths.get(CONFIG_DIR));
 

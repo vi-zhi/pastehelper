@@ -63,6 +63,21 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <configuration>
+                    <filters>
+                        <filter>
+                            <artifact>com.github.kwhat:jnativehook</artifact>
+                            <includes>
+                                <include>**/*.dll</include>
+                                <include>**/*.so</include>
+                            </includes>
+                        </filter>
+                    </filters>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
