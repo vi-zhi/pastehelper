@@ -15,9 +15,14 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyEvent;
+import java.io.*;
+import java.nio.file.*;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 /**
  * @author vizhi
@@ -44,13 +49,42 @@ public class GlobalHotkeyListenerService implements NativeKeyListener {
     @PostConstruct
     public void init() {
         try {
+            extractNativeLibs();
             GlobalScreen.registerNativeHook();
             GlobalScreen.addNativeKeyListener(this);
             List2Map();
             log.info("全局键盘监听器启动成功");
-        } catch (NativeHookException e) {
+        } catch (NativeHookException | IOException e) {
             log.error("全局键盘监听器启动失败", e);
             throw new RuntimeException(e);
+        }
+    }
+
+    private void extractNativeLibs() throws IOException {
+        // Find jnativehook jar on classpath and extract native libs to temp dir
+        String classPath = System.getProperty("java.class.path");
+        String[] jars = classPath.split(System.getProperty("path.separator"));
+        for (String jarPath : jars) {
+            if (!jarPath.contains("jnativehook")) continue;
+            if (!jarPath.endsWith(".jar")) continue;
+            File jarFile = new File(jarPath);
+            try (JarFile jf = new JarFile(jarFile)) {
+                Enumeration<JarEntry> entries = jf.entries();
+                while (entries.hasMoreElements()) {
+                    JarEntry entry = entries.nextElement();
+                    String name = entry.getName();
+                    if (!name.endsWith(".dll") && !name.endsWith(".dylib") && !name.endsWith(".so")) continue;
+                    File temp = File.createTempFile(name.replace('/', '_').replace('\\', '_'), ".tmp");
+                    temp.deleteOnExit();
+                    try (InputStream is = jf.getInputStream(entry);
+                         OutputStream os = new FileOutputStream(temp)) {
+                        is.transferTo(os);
+                    }
+                    String libName = name.substring(name.lastIndexOf('/') + 1);
+                    libName = libName.replaceAll("\\.[^.]+$", ""); // strip extension
+                    System.setProperty(libName, temp.getAbsolutePath());
+                }
+            }
         }
     }
 

@@ -65,17 +65,10 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
+                <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <filters>
-                        <filter>
-                            <artifact>com.github.kwhat:jnativehook</artifact>
-                            <includes>
-                                <include>**/*.dll</include>
-                                <include>**/*.so</include>
-                            </includes>
-                        </filter>
-                    </filters>
+                    <source>9</source>
+                    <target>9</target>
                 </configuration>
             </plugin>
         </plugins>
