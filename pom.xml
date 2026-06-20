@@ -62,6 +62,14 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <requiresUnpack>
+                        <dependency>
+                            <groupId>com.github.kwhat</groupId>
+                            <artifactId>jnativehook</artifactId>
+                        </dependency>
+                    </requiresUnpack>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
